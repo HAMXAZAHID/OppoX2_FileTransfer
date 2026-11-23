@@ -22,5 +22,9 @@ dependencies {
 tasks.test {
     // Integration tests run only when SMB_TEST_HOST is set (see README).
     environment("SMB_TEST_HOST", System.getenv("SMB_TEST_HOST") ?: "")
-    testLogging { events("passed", "failed", "skipped"); showStandardStreams = true }
+    testLogging {
+        events("passed", "failed", "skipped")
+        showStandardStreams = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
 }
