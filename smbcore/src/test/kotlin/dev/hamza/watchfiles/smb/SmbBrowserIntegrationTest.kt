@@ -49,10 +49,19 @@ class SmbBrowserIntegrationTest {
             assertContentEquals(data, out.toByteArray())
 
             smb.delete(listing.first { it.name == "big (1).bin" })
-            assertEquals(2, smb.list(dir).size)
+            // Some Samba builds finish a delete-on-close a moment after the close returns.
+            assertEquals(listOf("sub", "big.bin"), poll({ it.size == 2 }) { smb.list(dir).map { it.name } })
             smb.delete(RemoteEntry("x", dir, true, 0, 0))
-            assertTrue(smb.list("").none { it.path == dir })
+            assertTrue(poll({ l -> l.none { it == dir } }) { smb.list("").map { it.path } }.none { it == dir })
         }
+    }
+
+    /** Calls [read] for up to 3 s until [done] holds, and returns the last result. */
+    private fun <T> poll(done: (T) -> Boolean, read: () -> T): T {
+        var r = read()
+        var tries = 0
+        while (!done(r) && tries++ < 15) { Thread.sleep(200); r = read() }
+        return r
     }
 
     @Test fun cancelledUploadLeavesNoFile() {
@@ -64,7 +73,7 @@ class SmbBrowserIntegrationTest {
                     if (d > 500_000) throw IllegalStateException("cancel")
                 }
             }
-            assertTrue(smb.list("").none { it.name.startsWith("cancel") })
+            assertTrue(poll({ l -> l.none { it.startsWith("cancel") } }) { smb.list("").map { it.name } }.none { it.startsWith("cancel") })
         }
     }
 

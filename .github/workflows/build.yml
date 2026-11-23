@@ -51,6 +51,15 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk out/HomeFiles-release.apk
           cp app/build/outputs/apk/debug/app-debug.apk out/HomeFiles-debug.apk
 
+      - name: Show what the APK asks of the device
+        # Confirms there's no required Wear OS / Google library or feature, so it installs on ColorOS Watch.
+        run: |
+          AAPT2=$(ls -d "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)
+          "$AAPT2" dump badging out/HomeFiles-release.apk | grep -E "^(package|sdkVersion|targetSdkVersion|uses-library|uses-feature|uses-permission|native-code)" || true
+          if "$AAPT2" dump badging out/HomeFiles-release.apk | grep -E "uses-library:'com.google|uses-feature:.*name='android.hardware.type.watch'$"; then
+            echo "APK requires a Wear OS/Google component" >&2; exit 1
+          fi
+
       - uses: actions/upload-artifact@v4
         with:
           name: HomeFiles-apk

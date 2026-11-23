@@ -75,6 +75,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private var transferJob: Job? = null
 
     init {
+        app.getExternalFilesDir(null)?.let { dir ->
+            store.importFrom(File(dir, "servers.json"), servers)?.let { servers = it }
+        }
         wifi.start()
         local.cleanPartials()
         refreshLocal()

@@ -1,6 +1,8 @@
 # Home Files for OPPO Watch X2
 
-A Wear OS app that reaches the shared folders on your home network over SMB (Windows file sharing, Synology/QNAP and most other NAS boxes, Samba on Linux or a Raspberry Pi).
+An app for the OPPO Watch X2 that reaches the shared folders on your home network over SMB (Windows file sharing, Synology/QNAP and most other NAS boxes, Samba on Linux or a Raspberry Pi).
+
+It is built for the **Chinese OPPO Watch X2 (ColorOS Watch, plain Android 11)**: it needs no Google Play services, no Wear OS and no Google libraries, and it also runs on Wear OS watches. CI checks the APK's manifest for anything Google- or Wear-only on every build.
 
 On the watch you can:
 
@@ -11,18 +13,34 @@ On the watch you can:
 - create folders, delete files and folders on the server
 - open or delete downloaded files on the watch
 
-The app asks Wear OS for Wi-Fi while it's open, because the normal Bluetooth link through your phone can't reach your home network and is very slow.
+While it's open, the app asks for Wi-Fi and sends its traffic over it, because the Bluetooth link through your phone can't reach your home network and is very slow.
 
-## Install
+## Install on the watch (ColorOS Watch)
 
-1. Open the **Actions** tab on GitHub, pick the latest green **Build APK** run, and download the `HomeFiles-apk` artifact. Unzip it to get `HomeFiles-release.apk`.
-2. On the watch: Settings > System > About > tap **Build number** 7 times to unlock Developer options. Then in Developer options turn on **ADB debugging** and **Wireless debugging**, and note the IP address and port shown (pair first if asked).
-3. On your PC (with [platform-tools](https://developer.android.com/tools/releases/platform-tools)):
+1. On GitHub, open the **Actions** tab, pick the latest green **Build APK** run, and download the `HomeFiles-apk` artifact. Unzip it and use **`HomeFiles-release.apk`** (not the debug one).
+2. On the watch: Settings > About watch > Version info, tap the version number until developer options unlock. Turn on **USB debugging**.
+3. Connect the watch to your PC with its USB cable, choose file transfer, and accept the debugging prompt on the watch.
+4. On the PC, with [Android platform-tools](https://developer.android.com/tools/releases/platform-tools) installed:
    ```
-   adb pair <watch-ip>:<pairing-port>     # only the first time, enter the pairing code
-   adb connect <watch-ip>:<port>
+   adb devices
    adb install HomeFiles-release.apk
    ```
+
+### Adding a server without typing on the watch
+
+If typing on the watch is awkward, push your server settings from the PC once. Create `servers.json`:
+
+```json
+[{"name": "My PC", "host": "192.168.1.10", "share": "Media", "username": "me", "password": "secret"}]
+```
+
+Then run:
+
+```
+adb push servers.json /sdcard/Android/data/dev.hamza.watchfiles/files/servers.json
+```
+
+Open the app (close and reopen it if it was running). It imports the servers, encrypts the passwords and deletes the file. You can also fill any text box from the PC with `adb shell input text "192.168.1.10"` while the box is focused.
 
 ## Set up a share
 
