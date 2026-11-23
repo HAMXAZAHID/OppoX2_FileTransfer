@@ -26,7 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.wear.compose.foundation.lazy.AutoCenteringParams
+import androidx.wear.compose.foundation.lazy.ScalingLazyListAnchorType
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.ScalingLazyListScope
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
@@ -49,7 +49,8 @@ import java.util.Locale
 /** Standard watch screen: time at the top, a scrolling list that works with the crown. */
 @Composable
 fun ListScreen(content: ScalingLazyListScope.() -> Unit) {
-    val state = rememberScalingLazyListState()
+    // Start at the top of the list (ColorOS users expect a normal top-aligned list, not Wear OS centring).
+    val state = rememberScalingLazyListState(initialCenterItemIndex = 0)
     Scaffold(
         timeText = { TimeText() },
         vignette = { Vignette(vignettePosition = VignettePosition.TopAndBottom) },
@@ -58,8 +59,9 @@ fun ListScreen(content: ScalingLazyListScope.() -> Unit) {
         ScalingLazyColumn(
             state = state,
             modifier = Modifier.fillMaxSize(),
-            autoCentering = AutoCenteringParams(itemIndex = 0),
-            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 28.dp),
+            autoCentering = null,
+            anchorType = ScalingLazyListAnchorType.ItemStart,
+            contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 34.dp, bottom = 48.dp),
             content = content,
         )
     }
