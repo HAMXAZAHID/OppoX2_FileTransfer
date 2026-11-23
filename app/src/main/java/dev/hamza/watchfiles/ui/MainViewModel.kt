@@ -70,15 +70,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var editBusy by mutableStateOf(false)
         private set
 
-    private val settings = app.getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
-    var crownSpeed by mutableStateOf(
-        runCatching { CrownSpeed.valueOf(settings.getString("crown_speed", null) ?: "") }.getOrDefault(CrownSpeed.Normal)
-    )
+    /** True when the app may use the shared Download folder (all-files access). */
+    var downloadsAccess by mutableStateOf(local.hasDownloadsAccess())
         private set
 
-    fun cycleCrownSpeed() {
-        crownSpeed = crownSpeed.next()
-        settings.edit().putString("crown_speed", crownSpeed.name).apply()
+    fun refreshStorage() {
+        downloadsAccess = local.hasDownloadsAccess()
+        refreshLocal()
     }
 
     private var browser: SmbBrowser? = null

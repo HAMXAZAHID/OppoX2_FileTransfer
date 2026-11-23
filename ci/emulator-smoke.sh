@@ -59,6 +59,9 @@ sudo mkdir -p /srv/smbtest/Music && sudo chown -R smbuser /srv/smbtest
 
 echo "== Install"
 adb install -r "$APK"
+# What the user runs once on the watch (ColorOS may not have the settings screen).
+adb shell appops set $PKG MANAGE_EXTERNAL_STORAGE allow
+adb shell rm -f /sdcard/Download/hello.txt
 
 echo "== Add a server over adb (10.0.2.2 is the host running Samba)"
 adb shell am start -W -n $PKG/.MainActivity
@@ -80,8 +83,9 @@ tap_text "hello.txt"
 tap_text "Download to watch"
 wait_text "Saved to watch" 60
 shot downloaded
-# Android 11 hides the app's folder from adb; the upload below sends the downloaded copy
-# back to the share, so comparing it with the original checks the download too.
+got=$(adb shell cat /sdcard/Download/hello.txt | tr -d '\r')
+[ "$got" = "hello from the home network" ] || { echo "Download not in /sdcard/Download or wrong: '$got'" >&2; exit 1; }
+echo "Download saved to /sdcard/Download/hello.txt"
 tap_text "Done"
 
 echo "== Upload into Music"

@@ -4,9 +4,8 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.wear.compose.material.MaterialTheme
@@ -15,7 +14,6 @@ import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import dev.hamza.watchfiles.ui.BrowseScreen
 import dev.hamza.watchfiles.ui.EditServerScreen
-import dev.hamza.watchfiles.ui.LocalCrownStep
 import dev.hamza.watchfiles.ui.MainViewModel
 import dev.hamza.watchfiles.ui.NewFolderScreen
 import dev.hamza.watchfiles.ui.RemoteFileScreen
@@ -25,9 +23,17 @@ import dev.hamza.watchfiles.ui.WatchFileScreen
 import dev.hamza.watchfiles.ui.WatchFilesScreen
 
 class MainActivity : ComponentActivity() {
+    private val vm: MainViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { MaterialTheme { App() } }
+        setContent { MaterialTheme { App(vm) } }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // The user may have just granted Downloads access in Settings.
+        vm.refreshStorage()
     }
 }
 
@@ -36,11 +42,10 @@ private fun newFolderRoute(path: String) = "newfolder?path=" + Uri.encode(path)
 private fun uploadRoute(path: String) = "watchfiles?upload=" + Uri.encode(path)
 
 @Composable
-private fun App(vm: MainViewModel = viewModel()) {
+private fun App(vm: MainViewModel) {
     val nav = rememberSwipeDismissableNavController()
     val pathArg = listOf(navArgument("path") { type = NavType.StringType; defaultValue = "" })
 
-    CompositionLocalProvider(LocalCrownStep provides vm.crownSpeed.step) {
     SwipeDismissableNavHost(navController = nav, startDestination = "servers") {
         composable("servers") {
             ServersScreen(
@@ -88,5 +93,4 @@ private fun App(vm: MainViewModel = viewModel()) {
             TransferScreen(vm, onClose = { nav.popBackStack() })
         }
     }
-}
 }

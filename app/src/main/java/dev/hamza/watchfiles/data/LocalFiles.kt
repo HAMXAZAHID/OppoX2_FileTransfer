@@ -3,18 +3,31 @@ package dev.hamza.watchfiles.data
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Environment
 import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
 import dev.hamza.watchfiles.smb.SmbPaths
 import java.io.File
 
-/** Files kept on the watch, in the app's own "Transfers" folder. */
+/**
+ * Files on the watch. Downloads go to the shared Download folder (/storage/emulated/0/Download)
+ * so other apps and adb can reach them. That needs "All files access" on Android 11; until it's
+ * granted the app falls back to its own private folder.
+ */
 class LocalFiles(private val context: Context) {
+    fun hasDownloadsAccess(): Boolean = Environment.isExternalStorageManager()
+
     val dir: File
-        get() = (context.getExternalFilesDir("Transfers") ?: File(context.filesDir, "Transfers")).apply { mkdirs() }
+        get() = if (hasDownloadsAccess()) {
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).apply { mkdirs() }
+        } else {
+            (context.getExternalFilesDir("Transfers") ?: File(context.filesDir, "Transfers")).apply { mkdirs() }
+        }
+
+    val dirLabel: String get() = if (hasDownloadsAccess()) "Download" else "app folder"
 
     fun list(): List<File> =
-        dir.listFiles()?.filter { it.isFile && !it.name.endsWith(PARTIAL) }
+        dir.listFiles()?.filter { it.isFile && !it.isHidden && !it.name.endsWith(PARTIAL) }
             ?.sortedByDescending { it.lastModified() }
             .orEmpty()
 

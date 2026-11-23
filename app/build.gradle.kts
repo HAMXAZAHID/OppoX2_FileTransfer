@@ -12,8 +12,8 @@ android {
         applicationId = "dev.hamza.watchfiles"
         minSdk = 30 // Wear OS 3+; the OPPO Watch X2 ships with Wear OS 5 (API 34)
         targetSdk = 34
-        versionCode = 4
-        versionName = "0.1.3"
+        versionCode = 5
+        versionName = "0.2.0"
     }
 
     signingConfigs {

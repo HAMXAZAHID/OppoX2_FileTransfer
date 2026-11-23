@@ -8,7 +8,7 @@ On the watch you can:
 
 - save one or more servers (address, share, username, password; passwords are encrypted with the Android Keystore)
 - browse folders with the touch screen or the crown
-- download files to the watch, with progress and a stop button
+- download files to the watch's Download folder, with progress and a stop button
 - upload files from the watch into the folder you're looking at (name clashes get "(1)" added instead of overwriting)
 - create folders, delete files and folders on the server
 - open or delete downloaded files on the watch
@@ -25,6 +25,16 @@ While it's open, the app asks for Wi-Fi and sends its traffic over it, because t
    adb devices
    adb install HomeFiles-release.apk
    ```
+
+### Let it save into the Download folder
+
+Downloads go to the watch's shared **Download** folder (`/storage/emulated/0/Download`), where file managers, other apps and `adb pull` can reach them. Android 11 calls this "All files access". Grant it once from the PC:
+
+```
+adb shell appops set dev.hamza.watchfiles MANAGE_EXTERNAL_STORAGE allow
+```
+
+(or tap **Allow Downloads access** in the app if your watch has that settings screen). Until it's granted, downloads go to the app's private folder instead.
 
 ### Adding a server without typing on the watch
 

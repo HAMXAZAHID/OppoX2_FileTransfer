@@ -78,19 +78,39 @@ fun ServersScreen(
                 }
             }
         }
+        if (!vm.downloadsAccess) {
+            item {
+                ActionChip("Allow Downloads access", R.drawable.ic_download, secondary = "To save into the Download folder") {
+                    openAllFilesAccess(context)
+                }
+            }
+        }
         item { ActionChip("Add server", R.drawable.ic_add) { vm.startAdd(); onAdd() } }
         item {
             ActionChip("Watch files", R.drawable.ic_watch, secondary = "${vm.localFiles.size} files") {
                 vm.refreshLocal(); onWatchFiles()
             }
         }
-        item {
-            ActionChip("Crown speed", R.drawable.ic_refresh, secondary = vm.crownSpeed.label) { vm.cycleCrownSpeed() }
-        }
         if (vm.servers.isEmpty()) {
             note("Add a Windows shared folder or NAS share to get started.")
         }
     }
+}
+
+private fun openAllFilesAccess(context: android.content.Context) {
+    val pkg = android.net.Uri.parse("package:" + context.packageName)
+    val intents = listOf(
+        Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, pkg),
+        Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION),
+    )
+    for (i in intents) {
+        try {
+            context.startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); return
+        } catch (_: ActivityNotFoundException) {
+        } catch (_: SecurityException) {
+        }
+    }
+    Toast.makeText(context, "Grant it from a PC: see the app's README (adb appops)", Toast.LENGTH_LONG).show()
 }
 
 private fun openWifiSettings(context: android.content.Context) {
@@ -265,7 +285,7 @@ fun WatchFilesScreen(vm: MainViewModel, uploadTo: String?, onFile: (File) -> Uni
                 }
             }
         }
-        if (uploadTo == null) note("${formatSize(vm.local.freeBytes())} free on the watch")
+        if (uploadTo == null) note("In ${vm.local.dirLabel} · ${formatSize(vm.local.freeBytes())} free")
     }
 }
 
