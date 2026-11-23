@@ -2,6 +2,7 @@ package dev.hamza.watchfiles.ui
 
 import android.app.Application
 import android.net.Network
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -184,7 +185,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             listings[key] = runCatching {
                 val b = browser()
                 withContext(Dispatchers.IO) { b.list(key) }
-            }.fold({ Listing.Loaded(it) }, { Listing.Failed(message(it)) })
+            }.fold({ Listing.Loaded(it) }, {
+                Log.e(TAG, "Listing failed: $key", it)
+                Listing.Failed(message(it))
+            })
         }
     }
 
@@ -214,13 +218,27 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun download(entry: RemoteEntry) {
         startTransfer(Transfer(entry.name, upload = false, total = entry.size)) { job ->
-            val b = browser()
+            // Same name and size already on the watch: don't make a "(1)" copy.
+            local.existing(entry.name, entry.size)?.let {
+                Log.i(TAG, "Already on watch: ${it.path}")
+                return@startTransfer
+            }
             val target = local.newFile(entry.name)
             val part = local.partialFor(target)
             try {
+                var started = false
+                val b = browser()
                 withContext(Dispatchers.IO) {
-                    part.outputStream().buffered().use { out ->
-                        b.download(entry.path, out) { done, total -> job.ensureActive(); progress(done, total) }
+                    // A stale connection fails before any data arrives; then retry once, fresh.
+                    b.retryOnce {
+                        if (started) throw SmbException("Download interrupted. Try again.")
+                        part.outputStream().buffered().use { out ->
+                            b.download(entry.path, out) { done, total ->
+                                job.ensureActive()
+                                if (done > 0) started = true
+                                progress(done, total)
+                            }
+                        }
                     }
                     if (!part.renameTo(target)) throw SmbException("Couldn't save the file on the watch.")
                 }
@@ -254,6 +272,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: CancellationException) {
                 transfer = transfer?.copy(error = "Stopped.", finished = true)
             } catch (e: Throwable) {
+                Log.e(TAG, "Transfer failed: ${initial.name}", e)
                 transfer = transfer?.copy(error = message(e), finished = true)
             }
         }
@@ -303,7 +322,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val key = server to net
         browser?.let { if (browserKey == key) return it }
         closeBrowser(keepCurrent = true)
-        return SmbBrowser(server, net?.socketFactory).also { browser = it; browserKey = key }
+        return SmbBrowser(server, net?.socketFactory, timeoutSeconds = 12).also { browser = it; browserKey = key }
     }
 
     private fun closeBrowser(keepCurrent: Boolean = false) {
@@ -317,6 +336,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private fun message(e: Throwable): String {
         val msg = (e as? SmbException)?.message ?: SmbBrowser.friendly(e).message ?: "Something went wrong."
         return if (wifi.network.value == null) "No Wi-Fi connection. $msg" else msg
+    }
+
+    companion object {
+        private const val TAG = "HomeFiles"
     }
 
     override fun onCleared() {

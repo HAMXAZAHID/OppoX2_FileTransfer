@@ -80,7 +80,9 @@ class SmbBrowser(
     }
 
     /** Lists a folder: folders first, then files, both A to Z. Hidden entries are skipped. */
-    fun list(path: String): List<RemoteEntry> = guarded {
+    fun list(path: String): List<RemoteEntry> = retryOnce { listOnce(path) }
+
+    private fun listOnce(path: String): List<RemoteEntry> = guarded {
         val dir = SmbPaths.normalize(path)
         share().list(dir)
             .filter { it.fileName != "." && it.fileName != ".." }
@@ -164,6 +166,18 @@ class SmbBrowser(
     fun delete(entry: RemoteEntry) = guarded {
         val s = share()
         if (entry.isDirectory) s.rmdir(entry.path, true) else s.rm(entry.path)
+    }
+
+    /**
+     * Runs [block], and once more on a fresh connection if the first try hit a broken link.
+     * Watches drop Wi-Fi and servers drop idle sessions, so the first call after a pause often
+     * lands on a dead connection and would otherwise hang until the timeout, then fail.
+     */
+    fun <T> retryOnce(block: () -> T): T = try {
+        block()
+    } catch (e: SmbException) {
+        if (!e.isConnectionProblem) throw e
+        block()
     }
 
     /** Turns network/SMB failures into [SmbException]; anything else (e.g. a cancel from a callback) passes through. */

@@ -39,6 +39,7 @@ jobs:
           SMB_TEST_USER: smbuser
           SMB_TEST_PASS: testpass
           SMB_TEST_SHARE: test
+          SMB_TEST_RESTART_CMD: sudo systemctl restart smbd
         run: ./gradlew :smbcore:test --console=plain
 
       - name: Build APKs

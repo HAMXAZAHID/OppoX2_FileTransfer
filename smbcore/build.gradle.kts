@@ -22,6 +22,7 @@ dependencies {
 tasks.test {
     // Integration tests run only when SMB_TEST_HOST is set (see README).
     environment("SMB_TEST_HOST", System.getenv("SMB_TEST_HOST") ?: "")
+    environment("SMB_TEST_RESTART_CMD", System.getenv("SMB_TEST_RESTART_CMD") ?: "")
     testLogging {
         events("passed", "failed", "skipped")
         showStandardStreams = true

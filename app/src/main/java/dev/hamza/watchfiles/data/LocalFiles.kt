@@ -42,6 +42,10 @@ class LocalFiles(private val context: Context) {
         return f
     }
 
+    /** A file already in the folder with this name and exact size, if any. */
+    fun existing(name: String, size: Long): File? =
+        File(dir, SmbPaths.sanitizeName(name)).takeIf { it.isFile && it.length() == size }
+
     fun partialFor(target: File) = File(target.parentFile, target.name + PARTIAL)
 
     fun cleanPartials() {

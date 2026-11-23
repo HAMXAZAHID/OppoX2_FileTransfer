@@ -77,6 +77,19 @@ class SmbBrowserIntegrationTest {
         }
     }
 
+    @Test fun recoversFromDroppedConnection() {
+        assumeTrue(host.isNotEmpty())
+        val restart = System.getenv("SMB_TEST_RESTART_CMD").orEmpty()
+        assumeTrue(restart.isNotEmpty())
+        SmbBrowser(server(), timeoutSeconds = 5).use { smb ->
+            smb.list("")
+            // Kill the server side of the session, like an idle timeout or a Wi-Fi drop would.
+            ProcessBuilder("sh", "-c", restart).inheritIO().start().waitFor()
+            Thread.sleep(1500)
+            smb.list("") // must reconnect by itself instead of failing
+        }
+    }
+
     @Test fun wrongPasswordIsFriendly() {
         assumeTrue(host.isNotEmpty())
         val e = assertFailsWith<SmbException> { SmbBrowser(server(password = "nope")).use { it.testConnection() } }

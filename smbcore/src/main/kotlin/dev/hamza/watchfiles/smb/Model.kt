@@ -25,4 +25,14 @@ data class RemoteEntry(
 )
 
 /** Thrown with a message that is short enough to show on a watch. */
-class SmbException(message: String, cause: Throwable? = null) : Exception(message, cause)
+class SmbException(message: String, cause: Throwable? = null) : Exception(message, cause) {
+    /**
+     * True when the link itself broke (timeout, reset, stale connection) rather than the server
+     * refusing the request. Worth one automatic retry on a fresh connection.
+     */
+    val isConnectionProblem: Boolean
+        get() = generateSequence(cause) { it.cause }.none { it is com.hierynomus.mssmb2.SMBApiException } &&
+            generateSequence(cause) { it.cause }.any {
+                it is java.io.IOException || it is com.hierynomus.smbj.common.SMBRuntimeException
+            }
+}

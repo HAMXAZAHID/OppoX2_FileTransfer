@@ -22,7 +22,7 @@ import kotlin.math.abs
 import kotlin.math.sign
 
 /** How far one crown click scrolls. */
-private val CrownStep = 44.dp
+private val CrownStep = 24.dp
 
 /**
  * Scrolls a fixed distance per crown click, whatever size the system says the click is.
