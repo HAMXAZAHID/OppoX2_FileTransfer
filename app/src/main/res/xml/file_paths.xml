@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <external-files-path name="transfers" path="Transfers/" />
+    <files-path name="transfers_internal" path="Transfers/" />
+</paths>

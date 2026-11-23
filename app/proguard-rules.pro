@@ -1,0 +1,11 @@
+# smbj and its dependencies use reflection in a few places and reference optional JDK classes.
+-keep class com.hierynomus.** { *; }
+-keep class net.engio.mbassy.** { *; }
+-keep class org.bouncycastle.** { *; }
+-dontwarn javax.el.**
+-dontwarn org.ietf.jgss.**
+-dontwarn javax.naming.**
+-dontwarn org.slf4j.**
+-dontwarn org.bouncycastle.**
+-dontwarn com.hierynomus.**
+-dontwarn net.engio.mbassy.**
