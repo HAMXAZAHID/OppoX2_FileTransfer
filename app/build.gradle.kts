@@ -12,17 +12,33 @@ android {
         applicationId = "dev.hamza.watchfiles"
         minSdk = 30 // Wear OS 3+; the OPPO Watch X2 ships with Wear OS 5 (API 34)
         targetSdk = 34
-        versionCode = 2
-        versionName = "0.1.1"
+        versionCode = 3
+        versionName = "0.1.2"
+    }
+
+    signingConfigs {
+        // One fixed key so every build installs over the previous one with `adb install -r`.
+        // This app is only sideloaded, so the key lives in the repo. Pass -PsigningStore=... etc.
+        // (or the matching env vars) to sign with a private key instead.
+        create("sideload") {
+            storeFile = rootProject.file(
+                (findProperty("signingStore") as String?) ?: System.getenv("SIGNING_STORE") ?: "keystore/homefiles-sideload.jks"
+            )
+            storePassword = (findProperty("signingPassword") as String?) ?: System.getenv("SIGNING_PASSWORD") ?: "homefiles-sideload"
+            keyAlias = (findProperty("signingAlias") as String?) ?: System.getenv("SIGNING_ALIAS") ?: "homefiles"
+            keyPassword = (findProperty("signingPassword") as String?) ?: System.getenv("SIGNING_PASSWORD") ?: "homefiles-sideload"
+        }
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("sideload")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Signed with the debug key so the release APK can be sideloaded without extra setup.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("sideload")
         }
     }
 
