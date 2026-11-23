@@ -9,6 +9,11 @@ on:
 permissions:
   contents: write
 
+# A newer push replaces an older build, so apk-builds always holds the latest APK.
+concurrency:
+  group: build-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest

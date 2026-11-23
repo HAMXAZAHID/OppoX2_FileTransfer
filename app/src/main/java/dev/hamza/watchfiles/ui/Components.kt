@@ -39,20 +39,18 @@ import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.PositionIndicator
 import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Text
-import androidx.wear.compose.material.TimeText
 import androidx.wear.compose.material.Vignette
 import androidx.wear.compose.material.VignettePosition
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
 
-/** Standard watch screen: time at the top, a scrolling list that works with the crown. */
+/** Standard watch screen: a top-aligned scrolling list that works with the crown. No clock: ColorOS shows its own. */
 @Composable
 fun ListScreen(content: ScalingLazyListScope.() -> Unit) {
     // Start at the top of the list (ColorOS users expect a normal top-aligned list, not Wear OS centring).
     val state = rememberScalingLazyListState(initialCenterItemIndex = 0)
     Scaffold(
-        timeText = { TimeText() },
         vignette = { Vignette(vignettePosition = VignettePosition.TopAndBottom) },
         positionIndicator = { PositionIndicator(scalingLazyListState = state) },
     ) {
@@ -61,7 +59,7 @@ fun ListScreen(content: ScalingLazyListScope.() -> Unit) {
             modifier = Modifier.fillMaxSize(),
             autoCentering = null,
             anchorType = ScalingLazyListAnchorType.ItemStart,
-            contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 34.dp, bottom = 48.dp),
+            contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 30.dp, bottom = 48.dp),
             content = content,
         )
     }
