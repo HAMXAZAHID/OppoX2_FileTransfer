@@ -84,6 +84,9 @@ fun ServersScreen(
                 vm.refreshLocal(); onWatchFiles()
             }
         }
+        item {
+            ActionChip("Crown speed", R.drawable.ic_refresh, secondary = vm.crownSpeed.label) { vm.cycleCrownSpeed() }
+        }
         if (vm.servers.isEmpty()) {
             note("Add a Windows shared folder or NAS share to get started.")
         }

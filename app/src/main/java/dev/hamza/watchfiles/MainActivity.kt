@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -14,6 +15,7 @@ import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import dev.hamza.watchfiles.ui.BrowseScreen
 import dev.hamza.watchfiles.ui.EditServerScreen
+import dev.hamza.watchfiles.ui.LocalCrownStep
 import dev.hamza.watchfiles.ui.MainViewModel
 import dev.hamza.watchfiles.ui.NewFolderScreen
 import dev.hamza.watchfiles.ui.RemoteFileScreen
@@ -38,6 +40,7 @@ private fun App(vm: MainViewModel = viewModel()) {
     val nav = rememberSwipeDismissableNavController()
     val pathArg = listOf(navArgument("path") { type = NavType.StringType; defaultValue = "" })
 
+    CompositionLocalProvider(LocalCrownStep provides vm.crownSpeed.step) {
     SwipeDismissableNavHost(navController = nav, startDestination = "servers") {
         composable("servers") {
             ServersScreen(
@@ -85,4 +88,5 @@ private fun App(vm: MainViewModel = viewModel()) {
             TransferScreen(vm, onClose = { nav.popBackStack() })
         }
     }
+}
 }

@@ -56,7 +56,8 @@ fun ListScreen(content: ScalingLazyListScope.() -> Unit) {
     ) {
         ScalingLazyColumn(
             state = state,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().crownScroll(state),
+            rotaryScrollableBehavior = null, // replaced by crownScroll
             autoCentering = null,
             anchorType = ScalingLazyListAnchorType.ItemStart,
             contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 30.dp, bottom = 48.dp),

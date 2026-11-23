@@ -70,6 +70,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var editBusy by mutableStateOf(false)
         private set
 
+    private val settings = app.getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
+    var crownSpeed by mutableStateOf(
+        runCatching { CrownSpeed.valueOf(settings.getString("crown_speed", null) ?: "") }.getOrDefault(CrownSpeed.Normal)
+    )
+        private set
+
+    fun cycleCrownSpeed() {
+        crownSpeed = crownSpeed.next()
+        settings.edit().putString("crown_speed", crownSpeed.name).apply()
+    }
+
     private var browser: SmbBrowser? = null
     private var browserKey: Pair<SmbServer, Network?>? = null
     private var transferJob: Job? = null
