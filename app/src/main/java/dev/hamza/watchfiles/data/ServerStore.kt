@@ -55,36 +55,12 @@ class ServerStore(context: Context) {
         prefs.edit().putString(KEY, arr.toString()).apply()
     }
 
-    /**
-     * Imports servers from a JSON file pushed with adb (handy when the watch has no keyboard):
-     * [{"host":"192.168.1.10","share":"Media","username":"me","password":"secret","name":"PC","port":445}]
-     * The file is deleted after reading so the plain-text password doesn't stay on the watch.
-     * Returns the merged list, or null if there was nothing to import.
-     */
-    fun importFrom(file: java.io.File, existing: List<SmbServer>): List<SmbServer>? {
-        if (!file.isFile) return null
-        val text = runCatching { file.readText() }.getOrNull()
-        file.delete()
-        val arr = runCatching { JSONArray(text) }.getOrNull() ?: return null
-        var merged = existing
-        for (i in 0 until arr.length()) {
-            val o = arr.optJSONObject(i) ?: continue
-            val host = o.optString("host").trim()
-            val share = o.optString("share").trim()
-            if (host.isEmpty() || share.isEmpty()) continue
-            val old = merged.firstOrNull { it.host.equals(host, true) && it.share.equals(share, true) }
-            val server = SmbServer(
-                id = old?.id ?: java.util.UUID.randomUUID().toString(),
-                name = o.optString("name").trim().ifEmpty { "$host/$share" },
-                host = host,
-                share = share,
-                port = o.optInt("port", 445),
-                username = o.optString("username").trim(),
-                password = o.optString("password"),
-                domain = o.optString("domain").trim(),
-            )
-            merged = merged.filterNot { it.id == server.id } + server
-        }
+    /** Adds a server, or replaces the one with the same host and share. Returns the new list. */
+    fun upsert(server: SmbServer): List<SmbServer> {
+        val existing = load()
+        val old = existing.firstOrNull { it.host.equals(server.host, true) && it.share.equals(server.share, true) }
+        val s = server.copy(id = old?.id ?: server.id.ifEmpty { java.util.UUID.randomUUID().toString() })
+        val merged = existing.filterNot { it.id == s.id } + s
         save(merged)
         return merged
     }

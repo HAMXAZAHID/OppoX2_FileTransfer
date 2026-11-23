@@ -28,19 +28,13 @@ While it's open, the app asks for Wi-Fi and sends its traffic over it, because t
 
 ### Adding a server without typing on the watch
 
-If typing on the watch is awkward, push your server settings from the PC once. Create `servers.json`:
-
-```json
-[{"name": "My PC", "host": "192.168.1.10", "share": "Media", "username": "me", "password": "secret"}]
-```
-
-Then run:
+With the watch connected over adb, add a server from the PC in one command:
 
 ```
-adb push servers.json /sdcard/Android/data/dev.hamza.watchfiles/files/servers.json
+adb shell am start -n dev.hamza.watchfiles/.ImportActivity --es host 192.168.1.10 --es share Media --es user me --es pass secret --es name MyPC
 ```
 
-Open the app (close and reopen it if it was running). It imports the servers, encrypts the passwords and deletes the file. You can also fill any text box from the PC with `adb shell input text "192.168.1.10"` while the box is focused.
+Leave out `--es user` and `--es pass` for guest access, and add `--ei port 4455` for a non-standard port. Running it again with the same host and share updates that server. Only adb can do this: normal apps on the watch aren't allowed to open this screen. You can also fill any text box from the PC with `adb shell input text "192.168.1.10"` while the box is focused.
 
 ## Set up a share
 

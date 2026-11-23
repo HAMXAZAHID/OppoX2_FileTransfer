@@ -60,17 +60,12 @@ sudo mkdir -p /srv/smbtest/Music && sudo chown -R smbuser /srv/smbtest
 echo "== Install"
 adb install -r "$APK"
 
-echo "== Import a server over adb (10.0.2.2 is the host running Samba)"
-cat > servers.json <<'JSON'
-[{"name": "CI Samba", "host": "10.0.2.2", "port": 4455, "share": "test", "username": "smbuser", "password": "testpass"}]
-JSON
-# First launch creates the app's own folder; then push the file and start again.
+echo "== Add a server over adb (10.0.2.2 is the host running Samba)"
 adb shell am start -W -n $PKG/.MainActivity
 wait_text "Add server"
 shot first-launch
-adb shell am force-stop $PKG
-adb push servers.json /sdcard/Android/data/$PKG/files/servers.json
-adb shell am start -W -n $PKG/.MainActivity
+adb shell am start -W -n $PKG/.ImportActivity \
+  --es host 10.0.2.2 --ei port 4455 --es share test --es user smbuser --es pass testpass --es name "CI\ Samba"
 wait_text "CI Samba"
 shot home
 tap_text "CI Samba"
@@ -79,9 +74,6 @@ echo "== Browse"
 wait_text "hello.txt"
 wait_text "Music"
 shot browse
-if adb shell ls /sdcard/Android/data/$PKG/files/servers.json 2>/dev/null | grep -q servers.json; then
-  echo "servers.json should have been deleted after import" >&2; exit 1
-fi
 
 echo "== Download"
 tap_text "hello.txt"
