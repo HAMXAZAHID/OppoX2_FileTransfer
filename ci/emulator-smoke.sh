@@ -80,8 +80,8 @@ tap_text "hello.txt"
 tap_text "Download to watch"
 wait_text "Saved to watch" 60
 shot downloaded
-got=$(adb shell cat /sdcard/Android/data/$PKG/files/Transfers/hello.txt | tr -d '\r')
-[ "$got" = "hello from the home network" ] || { echo "Downloaded content wrong: '$got'" >&2; exit 1; }
+# Android 11 hides the app's folder from adb; the upload below sends the downloaded copy
+# back to the share, so comparing it with the original checks the download too.
 tap_text "Done"
 
 echo "== Upload into Music"
@@ -92,7 +92,7 @@ tap_text "hello.txt"
 wait_text "Uploaded" 60
 shot uploaded
 sudo cmp /srv/smbtest/hello.txt /srv/smbtest/Music/hello.txt
-echo "Upload matches."
+echo "Uploaded copy of the downloaded file matches the original."
 
 echo "== App still running"
 adb shell pidof $PKG
