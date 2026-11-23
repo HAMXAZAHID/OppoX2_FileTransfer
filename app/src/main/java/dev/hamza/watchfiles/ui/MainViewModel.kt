@@ -288,10 +288,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---------- Plumbing ----------
 
+    /**
+     * Waits briefly for Wi-Fi. Returns null if none came up, and then the default network is
+     * used (it may still reach the server, e.g. over Ethernet or a slow Wi-Fi handover).
+     */
     private suspend fun awaitWifi(): Network? {
         wifi.start()
-        return wifi.network.value ?: withTimeoutOrNull(15_000) { wifi.network.filterNotNull().first() }
-            ?: throw SmbException("No Wi-Fi. Turn on Wi-Fi on the watch and join your home network.")
+        return wifi.network.value ?: withTimeoutOrNull(8_000) { wifi.network.filterNotNull().first() }
     }
 
     private suspend fun browser(): SmbBrowser {
@@ -311,8 +314,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (b != null) viewModelScope.launch(Dispatchers.IO) { b.close() }
     }
 
-    private fun message(e: Throwable): String =
-        (e as? SmbException)?.message ?: SmbBrowser.friendly(e).message ?: "Something went wrong."
+    private fun message(e: Throwable): String {
+        val msg = (e as? SmbException)?.message ?: SmbBrowser.friendly(e).message ?: "Something went wrong."
+        return if (wifi.network.value == null) "No Wi-Fi connection. $msg" else msg
+    }
 
     override fun onCleared() {
         transferJob?.cancel()
